@@ -33,6 +33,7 @@ object HGNCCatalogImpl extends HGNCCatalog
        .getResourceAsStream("hgnc.tsv")
     )
     .getLines
+    .drop(1)  // Drop the TSV file header
     .map(_.split("\t"))
     .map(
       sn =>
