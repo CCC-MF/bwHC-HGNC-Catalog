@@ -1,8 +1,8 @@
-package de.bwhc.hgnc.impl
+package de.bwhc.catalogs.hgnc.impl
 
 
 
-import de.bwhc.hgnc.api._
+import de.bwhc.catalogs.hgnc._
 
 
 import scala.concurrent.Future
@@ -26,7 +26,7 @@ object HGNCCatalogImpl extends HGNCCatalog
   import scala.concurrent.ExecutionContext.Implicits._
 
 
-  private val geneList: List[HGNCGene] =
+  private lazy val geneList: Iterable[HGNCGene] =
     Source.fromInputStream(
       this.getClass
        .getClassLoader
@@ -42,7 +42,7 @@ object HGNCCatalogImpl extends HGNCCatalog
           HGNCGene.Name(sn(1))
         )
     )
-    .toList
+    .toIterable
 
 
   def genes: Iterable[HGNCGene] = geneList

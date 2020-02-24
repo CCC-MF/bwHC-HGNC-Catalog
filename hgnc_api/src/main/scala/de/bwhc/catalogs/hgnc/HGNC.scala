@@ -1,4 +1,4 @@
-package de.bwhc.hgnc.api
+package de.bwhc.catalogs.hgnc
 
 
 
