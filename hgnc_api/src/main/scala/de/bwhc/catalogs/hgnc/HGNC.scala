@@ -12,15 +12,12 @@ import scala.concurrent.Future
 object HGNCGene
 {
   case class Symbol(value: String)
-  case class Name(value: String)
 }
 
 case class HGNCGene
 (
   symbol: HGNCGene.Symbol,
-  name: HGNCGene.Name
-//  symbol: String,
-//  name: String
+  name: String
 )
 
 
@@ -33,7 +30,7 @@ trait HGNCCatalogProvider
 trait HGNCCatalog
 {
 
-  def genes: Iterable[HGNCGene]
+  def genes: Future[Iterable[HGNCGene]]
 
   def genesMatchingSymbol(sym: String): Future[Iterable[HGNCGene]]
 
@@ -41,7 +38,7 @@ trait HGNCCatalog
 
   def geneWithSymbol(sym: HGNCGene.Symbol): Future[Option[HGNCGene]]
 
-  def geneWithName(name: HGNCGene.Name): Future[Option[HGNCGene]]
+  def geneWithName(name: String): Future[Option[HGNCGene]]
 
 }
 

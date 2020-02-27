@@ -23,9 +23,6 @@ class HGNCCatalogProviderImpl extends HGNCCatalogProvider
 object HGNCCatalogImpl extends HGNCCatalog
 {
 
-  import scala.concurrent.ExecutionContext.Implicits._
-
-
   private lazy val geneList: Iterable[HGNCGene] =
     Source.fromInputStream(
       this.getClass
@@ -39,43 +36,44 @@ object HGNCCatalogImpl extends HGNCCatalog
       sn =>
         HGNCGene(
           HGNCGene.Symbol(sn(0)),
-          HGNCGene.Name(sn(1))
+          sn(1)
         )
     )
     .toIterable
 
 
-  def genes: Iterable[HGNCGene] = geneList
+  def genes: Future[Iterable[HGNCGene]] = 
+    Future.successful(geneList)
 
 
   def genesMatchingSymbol(
     sym: String
   ): Future[Iterable[HGNCGene]] =
-    Future {
+    Future.successful(
       geneList.filter(_.symbol.value.contains(sym))
-    }
+    )
 
   def genesMatchingName(
     name: String
   ): Future[Iterable[HGNCGene]] =
-    Future {
-      geneList.filter(_.name.value.contains(name))
-    }
+    Future.successful(
+      geneList.filter(_.name.contains(name))
+    )
 
 
   def geneWithSymbol(
     sym: HGNCGene.Symbol
   ): Future[Option[HGNCGene]] =
-    Future {
+    Future.successful(
       geneList.find(_.symbol == sym)
-    }
+    )
 
 
   def geneWithName(
-    name: HGNCGene.Name
+    name: String
   ): Future[Option[HGNCGene]] =
-    Future {
+    Future.successful(
       geneList.find(_.name == name)
-    }
+    )
 
 }

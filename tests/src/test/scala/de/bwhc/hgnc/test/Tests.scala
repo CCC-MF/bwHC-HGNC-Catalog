@@ -5,7 +5,7 @@ import scala.util.Success
 
 import org.scalatest.AsyncFlatSpec
 
-import de.bwhc.hgnc.api._
+import de.bwhc.catalogs.hgnc._
 
 
 class Tests extends AsyncFlatSpec
