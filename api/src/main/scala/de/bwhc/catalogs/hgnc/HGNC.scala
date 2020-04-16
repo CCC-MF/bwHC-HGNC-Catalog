@@ -17,7 +17,7 @@ object HGNCGene
 case class HGNCGene
 (
   symbol: HGNCGene.Symbol,
-  name: String
+  name: Option[String]
 )
 
 

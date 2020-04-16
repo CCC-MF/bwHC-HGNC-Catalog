@@ -36,12 +36,12 @@ object HGNCCatalogImpl extends HGNCCatalog
       sn =>
         HGNCGene(
           HGNCGene.Symbol(sn(0)),
-          sn(1)
+          Some(sn(1))
         )
     )
     .toIterable
 
-
+  
   def genes: Future[Iterable[HGNCGene]] = 
     Future.successful(geneList)
 
@@ -57,7 +57,7 @@ object HGNCCatalogImpl extends HGNCCatalog
     name: String
   ): Future[Iterable[HGNCGene]] =
     Future.successful(
-      geneList.filter(_.name.contains(name))
+      geneList.filter(_.name.exists(_.contains(name)))
     )
 
 
@@ -73,7 +73,7 @@ object HGNCCatalogImpl extends HGNCCatalog
     name: String
   ): Future[Option[HGNCGene]] =
     Future.successful(
-      geneList.find(_.name == name)
+      geneList.find(_.name.exists(_ == name))
     )
 
 }

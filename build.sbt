@@ -19,25 +19,25 @@ lazy val global = project
   .in(file("."))
   .settings(settings)
   .aggregate(
-     hgnc_api,
-     hgnc_impl,
+     api,
+     impl,
      tests
   )
 
 
 
-lazy val hgnc_api = project
+lazy val api = project
   .settings(
     name := "hgnc-api",
     settings
   )
 
-lazy val hgnc_impl = project
+lazy val impl = project
   .settings(
     name := "hgnc-impl",
     settings
   )
-  .dependsOn(hgnc_api)
+  .dependsOn(api)
 
 lazy val tests = project
   .settings(
@@ -48,8 +48,8 @@ lazy val tests = project
     )
   )
   .dependsOn(
-    hgnc_api,
-    hgnc_impl % "test"
+    api,
+    impl % "test"
   )
 
 
@@ -81,14 +81,14 @@ lazy val settings = commonSettings
 
 lazy val compilerOptions = Seq(
   "-unchecked",
-//  "-feature",
+  "-feature",
 //  "-language:existentials",
 //  "-language:higherKinds",
 //  "-language:implicitConversions",
 //  "-language:postfixOps",
   "-deprecation",
-  "-encoding",
-  "utf8"
+  "-Xfatal-warnings",
+  "-encoding", "utf8"
 )
 
 lazy val commonSettings = Seq(
