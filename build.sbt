@@ -3,13 +3,20 @@
  build.sbt adapted from https://github.com/pbassiner/sbt-multi-project-example/blob/master/build.sbt
 */
 
-
 name := "bwhc-hgnc-catalog"
 organization in ThisBuild := "de.bwhc"
-//scalaVersion in ThisBuild := "2.13.0"
-scalaVersion in ThisBuild := "2.12.8"
-version in ThisBuild:= "1.0"
+version in ThisBuild:= "1.0-SNAPSHOT"
 
+
+lazy val scala212 = "2.12.10"
+lazy val scala213 = "2.13.1"
+lazy val supportedScalaVersions =
+  List(
+    scala212,
+    scala213
+  )
+
+scalaVersion in ThisBuild := scala213
 
 //-----------------------------------------------------------------------------
 // PROJECTS
@@ -17,7 +24,10 @@ version in ThisBuild:= "1.0"
 
 lazy val global = project
   .in(file("."))
-  .settings(settings)
+  .settings(
+    settings,
+    crossScalaVersions := Nil
+  )
   .aggregate(
      api,
      impl,
@@ -29,13 +39,15 @@ lazy val global = project
 lazy val api = project
   .settings(
     name := "hgnc-api",
-    settings
+    settings,
+    crossScalaVersions := supportedScalaVersions
   )
 
 lazy val impl = project
   .settings(
     name := "hgnc-impl",
-    settings
+    settings,
+    crossScalaVersions := supportedScalaVersions
   )
   .dependsOn(api)
 
@@ -45,7 +57,8 @@ lazy val tests = project
     settings,
     libraryDependencies ++= Seq(
       dependencies.scalatest % "test"
-    )
+    ),
+    crossScalaVersions := supportedScalaVersions
   )
   .dependsOn(
     api,

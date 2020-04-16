@@ -39,7 +39,7 @@ object HGNCCatalogImpl extends HGNCCatalog
           Some(sn(1))
         )
     )
-    .toIterable
+    .toList
 
   
   def genes: Future[Iterable[HGNCGene]] = 
