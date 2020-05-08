@@ -26,7 +26,8 @@ lazy val global = project
   .in(file("."))
   .settings(
     settings,
-    crossScalaVersions := Nil
+    crossScalaVersions := Nil,
+    publish / skip := true
   )
   .aggregate(
      api,
@@ -58,7 +59,8 @@ lazy val tests = project
     libraryDependencies ++= Seq(
       dependencies.scalatest % "test"
     ),
-    crossScalaVersions := supportedScalaVersions
+    crossScalaVersions := supportedScalaVersions,
+    publish / skip := true
   )
   .dependsOn(
     api,

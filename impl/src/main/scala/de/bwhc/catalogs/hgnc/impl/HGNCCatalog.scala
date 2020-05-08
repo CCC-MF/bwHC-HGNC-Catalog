@@ -5,7 +5,7 @@ package de.bwhc.catalogs.hgnc.impl
 import de.bwhc.catalogs.hgnc._
 
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext,Future}
 import scala.io.Source
 
 
@@ -42,12 +42,16 @@ object HGNCCatalogImpl extends HGNCCatalog
     .toList
 
   
-  def genes: Future[Iterable[HGNCGene]] = 
+  def genes(
+    implicit ec: ExecutionContext
+  ): Future[Iterable[HGNCGene]] = 
     Future.successful(geneList)
 
 
   def genesMatchingSymbol(
     sym: String
+  )(
+    implicit ec: ExecutionContext
   ): Future[Iterable[HGNCGene]] =
     Future.successful(
       geneList.filter(_.symbol.value.contains(sym))
@@ -55,6 +59,8 @@ object HGNCCatalogImpl extends HGNCCatalog
 
   def genesMatchingName(
     name: String
+  )(
+    implicit ec: ExecutionContext
   ): Future[Iterable[HGNCGene]] =
     Future.successful(
       geneList.filter(_.name.exists(_.contains(name)))
@@ -63,6 +69,8 @@ object HGNCCatalogImpl extends HGNCCatalog
 
   def geneWithSymbol(
     sym: HGNCGene.Symbol
+  )(
+    implicit ec: ExecutionContext
   ): Future[Option[HGNCGene]] =
     Future.successful(
       geneList.find(_.symbol == sym)
@@ -71,6 +79,8 @@ object HGNCCatalogImpl extends HGNCCatalog
 
   def geneWithName(
     name: String
+  )(
+    implicit ec: ExecutionContext
   ): Future[Option[HGNCGene]] =
     Future.successful(
       geneList.find(_.name.exists(_ == name))

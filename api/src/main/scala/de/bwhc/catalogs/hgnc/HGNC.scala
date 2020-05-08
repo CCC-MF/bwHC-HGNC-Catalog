@@ -5,7 +5,7 @@ package de.bwhc.catalogs.hgnc
 import java.util.ServiceLoader
 
 import scala.util.Try
-import scala.concurrent.Future
+import scala.concurrent.{Future,ExecutionContext}
 
 
 
@@ -30,15 +30,33 @@ trait HGNCCatalogProvider
 trait HGNCCatalog
 {
 
-  def genes: Future[Iterable[HGNCGene]]
+  def genes(
+    implicit ec: ExecutionContext
+  ): Future[Iterable[HGNCGene]]
 
-  def genesMatchingSymbol(sym: String): Future[Iterable[HGNCGene]]
+  def genesMatchingSymbol(
+    sym: String
+  )(
+    implicit ec: ExecutionContext
+  ): Future[Iterable[HGNCGene]]
 
-  def genesMatchingName(name: String): Future[Iterable[HGNCGene]] 
+  def genesMatchingName(
+    name: String
+  )(
+    implicit ec: ExecutionContext
+  ): Future[Iterable[HGNCGene]] 
 
-  def geneWithSymbol(sym: HGNCGene.Symbol): Future[Option[HGNCGene]]
+  def geneWithSymbol(
+    sym: HGNCGene.Symbol
+  )(
+    implicit ec: ExecutionContext
+  ): Future[Option[HGNCGene]]
 
-  def geneWithName(name: String): Future[Option[HGNCGene]]
+  def geneWithName(
+    name: String
+  )(
+    implicit ec: ExecutionContext
+  ): Future[Option[HGNCGene]]
 
 }
 
