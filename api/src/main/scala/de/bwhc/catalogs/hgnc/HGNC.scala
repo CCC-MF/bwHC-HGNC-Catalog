@@ -30,6 +30,25 @@ trait HGNCCatalogProvider
 trait HGNCCatalog
 {
 
+  def genes: Iterable[HGNCGene]
+
+  def genesMatchingSymbol(
+    sym: String
+  ): Iterable[HGNCGene]
+
+  def genesMatchingName(
+    name: String
+  ): Iterable[HGNCGene] 
+
+  def geneWithSymbol(
+    sym: HGNCGene.Symbol
+  ): Option[HGNCGene]
+
+  def geneWithName(
+    name: String
+  ): Option[HGNCGene]
+
+/*
   def genes(
     implicit ec: ExecutionContext
   ): Future[Iterable[HGNCGene]]
@@ -57,7 +76,7 @@ trait HGNCCatalog
   )(
     implicit ec: ExecutionContext
   ): Future[Option[HGNCGene]]
-
+*/
 }
 
 

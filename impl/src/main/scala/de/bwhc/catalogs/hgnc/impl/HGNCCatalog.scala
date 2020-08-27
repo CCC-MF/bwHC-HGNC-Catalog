@@ -41,7 +41,35 @@ object HGNCCatalogImpl extends HGNCCatalog
     )
     .toList
 
-  
+
+  def genes = geneList
+
+
+  def genesMatchingSymbol(
+    sym: String
+  ): Iterable[HGNCGene] =
+    geneList.filter(_.symbol.value.contains(sym))
+
+
+  def genesMatchingName(
+    name: String
+  ): Iterable[HGNCGene] =
+    geneList.filter(_.name.exists(_.contains(name)))
+    
+
+  def geneWithSymbol(
+    sym: HGNCGene.Symbol
+  ): Option[HGNCGene] =
+    geneList.find(_.symbol == sym)
+
+
+  def geneWithName(
+    name: String
+  ): Option[HGNCGene] =
+    geneList.find(_.name.exists(_ == name))
+
+
+/*  
   def genes(
     implicit ec: ExecutionContext
   ): Future[Iterable[HGNCGene]] = 
@@ -85,5 +113,6 @@ object HGNCCatalogImpl extends HGNCCatalog
     Future.successful(
       geneList.find(_.name.exists(_ == name))
     )
+*/
 
 }
