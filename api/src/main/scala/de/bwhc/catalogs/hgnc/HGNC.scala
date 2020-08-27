@@ -7,18 +7,24 @@ import java.util.ServiceLoader
 import scala.util.Try
 import scala.concurrent.{Future,ExecutionContext}
 
+import play.api.libs.json.Json
 
-
-object HGNCGene
-{
-  case class Symbol(value: String)
-}
 
 case class HGNCGene
 (
   symbol: HGNCGene.Symbol,
   name: Option[String]
 )
+
+
+object HGNCGene
+{
+  case class Symbol(value: String) extends AnyVal
+
+  implicit val formatSymbol = Json.valueFormat[Symbol]
+
+  implicit val format = Json.format[HGNCGene]
+}
 
 
 trait HGNCCatalogProvider
