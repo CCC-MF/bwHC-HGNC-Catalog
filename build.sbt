@@ -81,7 +81,7 @@ lazy val dependencies =
     val scalatest  = "org.scalatest"     %% "scalatest"        % "3.0.8"
     val slf4j      = "org.slf4j"         %  "slf4j-api"        % "1.7.26"
     val logback    = "ch.qos.logback"    %  "logback-classic"  % "1.0.13"
-    val play_json  = "com.typesafe.play" %% "play-json"        % "2.8.0"
+    val play_json  = "com.typesafe.play" %% "play-json"        % "2.8.1"
   }
 
 lazy val commonDependencies = Seq(
