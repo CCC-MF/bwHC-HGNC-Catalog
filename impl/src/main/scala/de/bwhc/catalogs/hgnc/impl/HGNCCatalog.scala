@@ -48,25 +48,29 @@ object HGNCCatalogImpl extends HGNCCatalog
   def genesMatchingSymbol(
     sym: String
   ): Iterable[HGNCGene] =
-    geneList.filter(_.symbol.value.contains(sym))
+    geneList.filter(_.symbol.value.toLowerCase.contains(sym.toLowerCase))
+//    geneList.filter(_.symbol.value.contains(sym))
 
 
   def genesMatchingName(
     name: String
   ): Iterable[HGNCGene] =
-    geneList.filter(_.name.exists(_.contains(name)))
+    geneList.filter(_.name.exists(_.toLowerCase.contains(name.toLowerCase)))
+//    geneList.filter(_.name.exists(_.contains(name)))
     
 
   def geneWithSymbol(
     sym: HGNCGene.Symbol
   ): Option[HGNCGene] =
-    geneList.find(_.symbol == sym)
+    geneList.find(_.symbol.value.equalsIgnoreCase(sym.value))
+//    geneList.find(_.symbol == sym)
 
 
   def geneWithName(
     name: String
   ): Option[HGNCGene] =
-    geneList.find(_.name.exists(_ == name))
+    geneList.find(_.name.exists(_.equalsIgnoreCase(name)))
+//    geneList.find(_.name.exists(_ == name))
 
 
 /*  
