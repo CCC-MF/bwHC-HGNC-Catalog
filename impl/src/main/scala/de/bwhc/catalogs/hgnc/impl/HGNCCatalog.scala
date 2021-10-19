@@ -7,7 +7,7 @@ import de.bwhc.catalogs.hgnc._
 
 import scala.concurrent.{ExecutionContext,Future}
 import scala.io.Source
-
+import scala.util.Try
 
 
 class HGNCCatalogProviderImpl extends HGNCCatalogProvider
@@ -35,8 +35,10 @@ object HGNCCatalogImpl extends HGNCCatalog
     .map(
       sn =>
         HGNCGene(
-          HGNCGene.Symbol(sn(0)),
-          Some(sn(1))
+          sn(0),
+          sn(1),
+          Try(sn(2)).map(_.split(",").map(_.trim).toList).getOrElse(List.empty),
+          Try(sn(3)).map(_.split(",").map(_.trim).toList).getOrElse(List.empty),
         )
     )
     .toList
@@ -45,78 +47,34 @@ object HGNCCatalogImpl extends HGNCCatalog
   def genes = geneList
 
 
-  def genesMatchingSymbol(
-    sym: String
-  ): Iterable[HGNCGene] =
-    geneList.filter(_.symbol.value.toLowerCase.contains(sym.toLowerCase))
-//    geneList.filter(_.symbol.value.contains(sym))
+  def genesMatchingSymbol(sym: String): Iterable[HGNCGene] =
+    geneList.filter {
+      gene =>
+
+        val lcSym = sym.toLowerCase
+
+        gene.approvedSymbol.toLowerCase.contains(lcSym) ||
+        gene.previousSymbols.exists(_.toLowerCase.contains(lcSym)) ||
+        gene.aliasSymbols.exists(_.toLowerCase.contains(lcSym))
+          
+    }
 
 
-  def genesMatchingName(
-    name: String
-  ): Iterable[HGNCGene] =
-    geneList.filter(_.name.exists(_.toLowerCase.contains(name.toLowerCase)))
-//    geneList.filter(_.name.exists(_.contains(name)))
+  def genesMatchingName(pttrn: String): Iterable[HGNCGene] =
+    geneList.filter(_.name.toLowerCase.contains(pttrn.toLowerCase))
     
 
-  def geneWithSymbol(
-    sym: HGNCGene.Symbol
-  ): Option[HGNCGene] =
-    geneList.find(_.symbol.value.equalsIgnoreCase(sym.value))
-//    geneList.find(_.symbol == sym)
-
-
-  def geneWithName(
-    name: String
-  ): Option[HGNCGene] =
-    geneList.find(_.name.exists(_.equalsIgnoreCase(name)))
-//    geneList.find(_.name.exists(_ == name))
-
-
-/*  
-  def genes(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]] = 
-    Future.successful(geneList)
-
-
-  def genesMatchingSymbol(
-    sym: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]] =
-    Future.successful(
-      geneList.filter(_.symbol.value.contains(sym))
-    )
-
-  def genesMatchingName(
-    name: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]] =
-    Future.successful(
-      geneList.filter(_.name.exists(_.contains(name)))
+  def geneWithSymbol(sym: String): Option[HGNCGene] =
+    geneList.find(
+      gene =>
+        gene.approvedSymbol.equalsIgnoreCase(sym) ||
+        gene.previousSymbols.exists(_.equalsIgnoreCase(sym)) ||
+        gene.aliasSymbols.exists(_.equalsIgnoreCase(sym))
     )
 
 
-  def geneWithSymbol(
-    sym: HGNCGene.Symbol
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Option[HGNCGene]] =
-    Future.successful(
-      geneList.find(_.symbol == sym)
-    )
+  def geneWithName(name: String): Option[HGNCGene] =
+    geneList.find(_.name.equalsIgnoreCase(name))
 
-
-  def geneWithName(
-    name: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Option[HGNCGene]] =
-    Future.successful(
-      geneList.find(_.name.exists(_ == name))
-    )
-*/
 
 }

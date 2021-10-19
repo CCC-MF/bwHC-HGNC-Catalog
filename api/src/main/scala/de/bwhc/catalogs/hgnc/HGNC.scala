@@ -10,18 +10,28 @@ import scala.concurrent.{Future,ExecutionContext}
 import play.api.libs.json.Json
 
 
+/*
 case class HGNCGene
 (
   symbol: HGNCGene.Symbol,
-  name: Option[String]
+  name: Option[String],
+)
+*/
+
+case class HGNCGene
+(
+  approvedSymbol: String,
+  name: String,
+  previousSymbols: List[String],
+  aliasSymbols: List[String]
 )
 
 
 object HGNCGene
 {
-  case class Symbol(value: String) extends AnyVal
+//  case class Symbol(value: String) extends AnyVal
 
-  implicit val formatSymbol = Json.valueFormat[Symbol]
+//  implicit val formatSymbol = Json.valueFormat[Symbol]
 
   implicit val format = Json.format[HGNCGene]
 }
@@ -38,51 +48,14 @@ trait HGNCCatalog
 
   def genes: Iterable[HGNCGene]
 
-  def genesMatchingSymbol(
-    sym: String
-  ): Iterable[HGNCGene]
+  def genesMatchingSymbol(sym: String): Iterable[HGNCGene]
 
-  def genesMatchingName(
-    name: String
-  ): Iterable[HGNCGene] 
+  def genesMatchingName(name: String): Iterable[HGNCGene] 
 
-  def geneWithSymbol(
-    sym: HGNCGene.Symbol
-  ): Option[HGNCGene]
+  def geneWithSymbol(sym: String): Option[HGNCGene]
 
-  def geneWithName(
-    name: String
-  ): Option[HGNCGene]
+  def geneWithName(name: String): Option[HGNCGene]
 
-/*
-  def genes(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]]
-
-  def genesMatchingSymbol(
-    sym: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]]
-
-  def genesMatchingName(
-    name: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Iterable[HGNCGene]] 
-
-  def geneWithSymbol(
-    sym: HGNCGene.Symbol
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Option[HGNCGene]]
-
-  def geneWithName(
-    name: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[Option[HGNCGene]]
-*/
 }
 
 
