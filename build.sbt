@@ -51,6 +51,9 @@ lazy val impl = project
   .settings(
     name := "hgnc-impl",
     settings,
+    libraryDependencies ++= Seq(
+      dependencies.logback
+    ),
     crossScalaVersions := supportedScalaVersions
   )
   .dependsOn(api)

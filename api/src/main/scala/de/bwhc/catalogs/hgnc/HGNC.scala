@@ -20,7 +20,8 @@ case class HGNCGene
 
 case class HGNCGene
 (
-  approvedSymbol: String,
+  id: HGNCGene.Id,
+  symbol: String,
   name: String,
   previousSymbols: List[String],
   aliasSymbols: List[String]
@@ -29,12 +30,13 @@ case class HGNCGene
 
 object HGNCGene
 {
-//  case class Symbol(value: String) extends AnyVal
+  case class Id(value: String) extends AnyVal
 
-//  implicit val formatSymbol = Json.valueFormat[Symbol]
+  implicit val formatId = Json.valueFormat[Id]
 
   implicit val format = Json.format[HGNCGene]
 }
+
 
 
 trait HGNCCatalogProvider
@@ -48,13 +50,18 @@ trait HGNCCatalog
 
   def genes: Iterable[HGNCGene]
 
+
+  def gene(id: HGNCGene.Id): Option[HGNCGene]
+
+  // INFO: Returns List[HGNCGene] because 'sym' may be an ambiguous 'previous/alias symbol',
+  // resulting in possibly more than one hit
+  def geneWithSymbol(sym: String): List[HGNCGene]
+
+  def geneWithName(name: String): Option[HGNCGene]
+
   def genesMatchingSymbol(sym: String): Iterable[HGNCGene]
 
   def genesMatchingName(name: String): Iterable[HGNCGene] 
-
-  def geneWithSymbol(sym: String): Option[HGNCGene]
-
-  def geneWithName(name: String): Option[HGNCGene]
 
 }
 
