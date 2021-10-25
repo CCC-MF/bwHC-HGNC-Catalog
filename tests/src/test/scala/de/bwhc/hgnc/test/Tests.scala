@@ -1,6 +1,8 @@
 package de.bwhc.hgnc.test
 
 
+
+import java.nio.file.Files.createTempDirectory
 import scala.util.Success
 
 import org.scalatest.FlatSpec
@@ -8,10 +10,12 @@ import org.scalatest.FlatSpec
 import de.bwhc.catalogs.hgnc._
 
 
-object Util
+object Setup
 {
 
-  val hgncTry = HGNCCatalog.getInstance
+  System.setProperty("bwhc.hgnc.dir", createTempDirectory("bwhc_hgnc_test_").toAbsolutePath.toString)
+
+  lazy val hgncTry = HGNCCatalog.getInstance
 
 }
 
@@ -21,12 +25,12 @@ class Tests extends FlatSpec
 
   "HGNCCatalog" should "have been successfully loaded" in {
 
-     assert(Util.hgncTry.isSuccess)
+     assert(Setup.hgncTry.isSuccess)
 
   }
 
 
-  lazy val hgnc = Util.hgncTry.get
+  lazy val hgnc = Setup.hgncTry.get
 
 
   it should "contain matches for symbol 'TP53'" in {
