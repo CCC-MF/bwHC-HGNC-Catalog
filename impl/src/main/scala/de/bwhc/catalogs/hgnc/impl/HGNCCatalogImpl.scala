@@ -30,7 +30,19 @@ class HGNCCatalogProviderImpl extends HGNCCatalogProvider
 
 trait HGNCGeneListProvider
 {
+  
   def geneList: Iterable[HGNCGene]
+
+  protected final val separator = "\t"
+
+  protected final def toSymbolList(csv: String): List[String] = {
+    csv.replace("\"","")
+       .split("\\|")
+       .map(_.trim)
+       .filterNot(_.isEmpty)
+       .toList
+  }
+  
 }
 
 
@@ -43,14 +55,14 @@ object HGNCCatalogImpl extends HGNCCatalog
   private class DefaultHGNCGeneListProvider extends HGNCGeneListProvider
   {
 
+    private val sysProperty = "bwhc.hgnc.dir"
+
     private val hgncUrl =
       "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt"
 
-    private val separator = "\t"
-
 
     private val hgncFile = 
-      Option(System.getProperty("bwhc.hgnc.dir"))
+      Option(System.getProperty(sysProperty))
         .map(new File(_))
         .map {
           dir =>
@@ -75,10 +87,13 @@ object HGNCCatalogImpl extends HGNCCatalog
               ){
                 log.info(s"Fetching current complete HGNC set from $hgncUrl")
                 
-                Using(
-                  new URL(hgncUrl).openStream
-                )(
-                  Files.copy(_,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
+                val connection = new URL(hgncUrl).openConnection
+
+                connection.setReadTimeout(3000) // time-out in milli-seconds
+
+                Using(connection.getInputStream)(
+                  in => 
+                    Files.copy(in,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
                 )
                 .transform(
                   s => Success(file),
@@ -96,6 +111,12 @@ object HGNCCatalogImpl extends HGNCCatalog
       
         }
         .recover {
+          case n: NoSuchElementException =>
+            log.warn(s"This error occurs most likely due to undefined JVM property '$sysProperty'")
+            log.warn("Falling back to pre-packaged HGNC set")
+
+            Source.fromResource("hgnc_complete_set.txt")
+
           case t =>
             log.warn(s"Failed to get current HGNC set from $hgncUrl", t)
             log.warn("Falling back to pre-packaged HGNC set")
@@ -108,14 +129,6 @@ object HGNCCatalogImpl extends HGNCCatalog
 
     }
 
-  
-    private def toSymbolList(csv: String): List[String] =
-      csv.split(",")
-         .map(_.trim)
-         .filterNot(_.isEmpty)
-         .toList 
-  
-  
     private def toGenes(lines: List[String]): List[HGNCGene] = {
 
       val header =

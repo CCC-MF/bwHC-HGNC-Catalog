@@ -12,8 +12,13 @@ import de.bwhc.catalogs.hgnc._
 
 object Setup
 {
+/*
+  val tmpDir = createTempDirectory("bwhc_hgnc_test_")
 
-  System.setProperty("bwhc.hgnc.dir", createTempDirectory("bwhc_hgnc_test_").toAbsolutePath.toString)
+  System.setProperty("bwhc.hgnc.dir", tmpDir.toAbsolutePath.toString)
+
+  tmpDir.toFile.deleteOnExit
+*/
 
   lazy val hgncTry = HGNCCatalog.getInstance
 
@@ -40,7 +45,40 @@ class Tests extends FlatSpec
   }
 
 
-  it should "return the same genes as queried by previous symbol (if present)" in {
+  it should "contain 5 alias symbols for Gene with ID 'HGNC:24086'" in {
+
+    assert(
+      hgnc.gene(HGNCGene.Id("HGNC:24086")).get.aliasSymbols.size == 5
+    )
+    
+  }
+
+
+  "Some previous symbols" should "exist" in {
+
+    assert(
+      !hgnc.genes
+        .filterNot(_.previousSymbols.isEmpty)
+        .take(100)
+        .isEmpty
+    )
+    
+  }
+
+
+  "Some alias symbols" should "exist" in {
+
+    assert(
+      !hgnc.genes
+        .filterNot(_.aliasSymbols.isEmpty)
+        .take(100)
+        .isEmpty
+    )
+    
+  }
+
+
+  "The same genes" should "have been returned queried by previous symbol (if present)" in {
 
     assert(
       hgnc.genes
@@ -53,9 +91,9 @@ class Tests extends FlatSpec
     
   }
 
-  it should "return the same genes as queried by alias symbol (if present)" in {
+  "The same genes" should "have been returned queried by alias symbol (if present)" in {
 
-    val passed =
+    assert(
       hgnc.genes
         .filterNot(_.aliasSymbols.isEmpty)
         .take(100)
@@ -63,8 +101,8 @@ class Tests extends FlatSpec
           gene => hgnc.geneWithSymbol(gene.aliasSymbols.head).contains(gene)
         )
 
-    assert(passed)
-    
+    )
+
   }
 
 

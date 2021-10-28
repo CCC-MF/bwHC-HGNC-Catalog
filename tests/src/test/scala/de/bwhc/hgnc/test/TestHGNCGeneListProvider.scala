@@ -11,19 +11,11 @@ import de.bwhc.catalogs.hgnc.impl.HGNCGeneListProvider
 class TestHGNCGeneListProvider extends HGNCGeneListProvider
 {
 
-  private val separator = "\t"
-
-
   private val lines =
     Source.fromResource("hgnc_complete_set.txt")
       .getLines
       .toList
 
-  private def toSymbolList(csv: String): List[String] =
-    csv.split(",")
-       .map(_.trim)
-       .filterNot(_.isEmpty)
-       .toList
 
   private val header =
     lines.head.split(separator).toList
