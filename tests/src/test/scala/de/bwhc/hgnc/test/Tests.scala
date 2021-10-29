@@ -5,37 +5,27 @@ package de.bwhc.hgnc.test
 import java.nio.file.Files.createTempDirectory
 import scala.util.Success
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
-import de.bwhc.catalogs.hgnc._
+import de.bwhc.catalogs.hgnc.{HGNCCatalog,HGNCGene}
 
 
-object Setup
+class Tests extends AnyFlatSpec
 {
-/*
-  val tmpDir = createTempDirectory("bwhc_hgnc_test_")
 
-  System.setProperty("bwhc.hgnc.dir", tmpDir.toAbsolutePath.toString)
+  val hgncTry = HGNCCatalog.getInstance
 
-  tmpDir.toFile.deleteOnExit
-*/
-
-  lazy val hgncTry = HGNCCatalog.getInstance
-
-}
-
-
-class Tests extends FlatSpec
-{
 
   "HGNCCatalog" should "have been successfully loaded" in {
 
-     assert(Setup.hgncTry.isSuccess)
+     assert(hgncTry.isSuccess)
 
   }
 
 
-  lazy val hgnc = Setup.hgncTry.get
+  lazy val hgnc = hgncTry.get
 
 
   it should "contain matches for symbol 'TP53'" in {
@@ -107,3 +97,4 @@ class Tests extends FlatSpec
 
 
 }
+
