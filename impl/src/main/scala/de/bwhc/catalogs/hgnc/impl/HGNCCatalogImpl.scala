@@ -24,7 +24,7 @@ import org.slf4j.{Logger,LoggerFactory}
 class HGNCCatalogProviderImpl extends HGNCCatalogProvider
 {
 
-  def getInstanceF[F[_]]: HGNCCatalog[F] = {
+  override def getInstanceF[F[_]]: HGNCCatalog[F] = {
     new HGNCCatalogImpl[F]
   }
 
@@ -35,46 +35,9 @@ class HGNCCatalogImpl[F[_]] extends HGNCCatalog[F]
 {
 
   override def genes(implicit F: Applicative[F]) =
-    F.pure(HGNCCatalogImpl.geneLoader.geneList)
-
-
-  override def gene(id: HGNCGene.Id)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
-    genes.map(_.find(_.id == id))
-
-
-  override def geneWithSymbol(sym: String)(implicit F: Applicative[F]): F[List[HGNCGene]] =
-    genes.map(
-      _.filter(
-        gene =>
-          gene.symbol.equalsIgnoreCase(sym) ||
-            gene.previousSymbols.exists(_.equalsIgnoreCase(sym)) ||
-              gene.aliasSymbols.exists(_.equalsIgnoreCase(sym))
-      )
-      .toList
+    F.pure(
+      HGNCCatalogImpl.geneLoader.geneList
     )
-
-  override def geneWithName(name: String)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
-    genes.map(_.find(_.name.equalsIgnoreCase(name)))
-
-
-  override def genesMatchingSymbol(sym: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
-    genes.map(
-      _.filter {
-        gene =>
-
-          val lcSym = sym.toLowerCase
-
-          gene.symbol.toLowerCase.contains(lcSym) ||
-            gene.previousSymbols.exists(_.toLowerCase.contains(lcSym)) ||
-              gene.aliasSymbols.exists(_.toLowerCase.contains(lcSym))
-          
-      }
-    )
-
-  override def genesMatchingName(pttrn: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
-    genes.map(_.filter(_.name.toLowerCase.contains(pttrn.toLowerCase)))
-    
-
 }
 
 

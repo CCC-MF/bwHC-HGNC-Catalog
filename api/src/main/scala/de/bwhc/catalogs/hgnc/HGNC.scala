@@ -41,21 +41,56 @@ trait HGNCCatalogProvider
 
 trait HGNCCatalog[F[_]]
 {
+  self =>
+
+  import cats.syntax.functor._
+
 
   def genes(implicit F: Applicative[F]): F[Iterable[HGNCGene]]
 
 
-  def gene(id: HGNCGene.Id)(implicit F: Applicative[F]): F[Option[HGNCGene]]
+  def gene(id: HGNCGene.Id)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
+    self.genes
+      .map(_.find(_.id == id))
+
 
   // INFO: Returns List[HGNCGene] because 'sym' may be an ambiguous 'previous/alias symbol',
   // resulting in possibly more than one hit
-  def geneWithSymbol(sym: String)(implicit F: Applicative[F]): F[List[HGNCGene]]
+  def geneWithSymbol(sym: String)(implicit F: Applicative[F]): F[List[HGNCGene]] =
+    self.genes
+      .map(
+        _.filter(
+          gene =>
+            gene.symbol.equalsIgnoreCase(sym) ||
+              gene.previousSymbols.exists(_.equalsIgnoreCase(sym)) ||
+                gene.aliasSymbols.exists(_.equalsIgnoreCase(sym))
+        )
+        .toList
+      )
 
-  def geneWithName(name: String)(implicit F: Applicative[F]): F[Option[HGNCGene]]
+  def geneWithName(name: String)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
+    self.genes
+      .map(_.find(_.name.equalsIgnoreCase(name)))
 
-  def genesMatchingSymbol(sym: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]]
 
-  def genesMatchingName(name: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]]
+  def genesMatchingSymbol(sym: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
+    self.genes
+      .map(
+        _.filter {
+          gene =>
+
+            val lcSym = sym.toLowerCase
+
+            gene.symbol.toLowerCase.contains(lcSym) ||
+              gene.previousSymbols.exists(_.toLowerCase.contains(lcSym)) ||
+                gene.aliasSymbols.exists(_.toLowerCase.contains(lcSym))
+
+        }
+      )
+
+  def genesMatchingName(pttrn: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
+    self.genes
+      .map(_.filter(_.name.toLowerCase.contains(pttrn.toLowerCase)))
 
 }
 
