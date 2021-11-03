@@ -85,7 +85,8 @@ lazy val dependencies =
     val scalatest  = "org.scalatest"     %% "scalatest"        % "3.1.1"
     val slf4j      = "org.slf4j"         %  "slf4j-api"        % "1.7.26"
     val logback    = "ch.qos.logback"    %  "logback-classic"  % "1.0.13"
-    val cats_core  = "org.typelevel"     %% "cats-core"        % "2.6.1"
+    val cats_core  = "org.typelevel"     %% "cats-core"        % "2.1.1"
+//    val cats_core  = "org.typelevel"     %% "cats-core"        % "2.6.1"
     val play_json  = "com.typesafe.play" %% "play-json"        % "2.8.1"
   }
 

@@ -17,6 +17,9 @@ import scala.concurrent.Future
 class AsyncTests extends AsyncFlatSpec
 {
 
+  import cats.instances.future._
+
+
   val hgncTry = HGNCCatalog.getInstanceF[Future]
 
 
