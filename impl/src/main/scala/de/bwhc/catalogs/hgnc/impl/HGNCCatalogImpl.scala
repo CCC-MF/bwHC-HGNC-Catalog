@@ -43,25 +43,65 @@ class HGNCCatalogImpl[F[_]] extends HGNCCatalog[F]
 
 trait HGNCGeneLoader
 {
-  
   def geneList: Iterable[HGNCGene]
-
 }
 
 
-trait TsvHGNCGeneLoader extends HGNCGeneLoader
+trait TsvParsingOps
 {
-  
-  protected final val separator = "\t"
 
-  protected final def toSymbolList(csv: String): List[String] = {
+  this: HGNCGeneLoader =>
+  
+  final val separator = "\t"
+
+  final def toSymbolList(csv: String): List[String] =
     csv.replace("\"","")
        .split("\\|")
        .map(_.trim)
        .filterNot(_.isEmpty)
        .toList
-  }
   
+  final def readGenes(in: InputStream): List[HGNCGene] = {
+
+    import scala.util.chaining._
+
+    val lines =
+      Source.fromInputStream(in)
+        .getLines
+        .toList
+
+    val header =
+      lines.head
+        .split(separator)
+        .toList
+ 
+    val hgncId       = header.indexOf("hgnc_id")
+    val symbol       = header.indexOf("symbol")
+    val name         = header.indexOf("name")
+    val prevSymbols  = header.indexOf("prev_symbol")
+    val aliasSymbols = header.indexOf("alias_symbol")
+ 
+    val genes =
+      lines.tail
+        .map(_ split separator)
+        .map(
+          line =>
+            HGNCGene(
+              HGNCGene.Id(line(hgncId)),
+              line(symbol),
+              line(name),
+              line(prevSymbols) pipe toSymbolList,
+              line(aliasSymbols) pipe toSymbolList
+//              Try(line(prevSymbols)).map(toSymbolList).getOrElse(List.empty),
+//              Try(line(aliasSymbols)).map(toSymbolList).getOrElse(List.empty)
+            )
+        )
+
+    in.close
+
+    genes
+  }
+
 }
 
 /*
@@ -190,7 +230,7 @@ private object HGNCCatalogImpl
   }
 */
 
-  private class DefaultHGNCGeneLoader extends TsvHGNCGeneLoader
+  private class DefaultHGNCGeneLoader extends HGNCGeneLoader with TsvParsingOps
   {
 
     private val sysProperty = "bwhc.hgnc.dir"
@@ -210,7 +250,7 @@ private object HGNCCatalogImpl
         .map(new File(_,"hgnc_complete_set.txt"))
 
 
-    private def loadLines: List[String] = {
+    private def loadInput: InputStream = {
 
       Try(hgncFile.get)
         .flatMap {
@@ -245,7 +285,7 @@ private object HGNCCatalogImpl
                 Success(file)
               }
             )
-            .map(Source.fromFile(_))
+            .map(new FileInputStream(_))
       
         }
         .recover {
@@ -253,58 +293,30 @@ private object HGNCCatalogImpl
             log.warn(s"Failed to import HGNC gene set. This error occurs most likely due to undefined JVM property '$sysProperty'")
             log.warn("Falling back to pre-packaged HGNC set")
 
-            Source.fromResource("hgnc_complete_set.txt")
+            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.txt")
 
           case t =>
             log.warn(s"Failed to get current HGNC set from $hgncUrl", t)
             log.warn("Falling back to pre-packaged HGNC set")
 
-            Source.fromResource("hgnc_complete_set.txt")
+            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.txt")
         }
-        .map(_.getLines)
         .get
-        .toList
-
-    }
-
-    private def toGenes(lines: List[String]): List[HGNCGene] = {
-
-      val header =
-        lines.head.split(separator).toList
- 
-      val hgncId       = header.indexOf("hgnc_id")
-      val symbol       = header.indexOf("symbol")
-      val name         = header.indexOf("name")
-      val prevSymbols  = header.indexOf("prev_symbol")
-      val aliasSymbols = header.indexOf("alias_symbol")
-  
-      lines.tail
-        .map(_.split(separator))
-        .map(
-          line =>
-            HGNCGene(
-              HGNCGene.Id(line(hgncId)),
-              line(symbol),
-              line(name),
-              Try(line(prevSymbols)).map(toSymbolList).getOrElse(List.empty),
-              Try(line(aliasSymbols)).map(toSymbolList).getOrElse(List.empty)
-            )
-        )
 
     }
 
 
     private var loadedGenes =
-      toGenes(loadLines)
+      readGenes(loadInput)
 
     private var lastUpdate = Instant.now
 
 
     override def geneList: Iterable[HGNCGene] = {
 
-      if (lastUpdate.isBefore(Instant.now.minus(Duration.of(7,DAYS)))){
+      if (lastUpdate isBefore Instant.now.minus(Duration.of(7,DAYS))){
         log.info("Updating cached HGNC Gene set")
-        loadedGenes = toGenes(loadLines)
+        loadedGenes = readGenes(loadInput)
       }
 
       loadedGenes
@@ -322,197 +334,3 @@ private object HGNCCatalogImpl
     .getOrElse(new DefaultHGNCGeneLoader)
 
 }
-
-
-
-/*
-class HGNCCatalogProviderImpl extends HGNCCatalogProvider
-{
-
-  def getInstance: HGNCCatalog = {
-    HGNCCatalogImpl
-  }
-
-}
-
-object HGNCCatalogImpl extends HGNCCatalog
-{
-
-  private val log = LoggerFactory.getLogger(this.getClass)
-
-
-  private class DefaultHGNCGeneLoader extends HGNCGeneLoader
-  {
-
-    private val sysProperty = "bwhc.hgnc.dir"
-
-    private val hgncUrl =
-      "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt"
-
-
-    private val hgncFile = 
-      Option(System.getProperty(sysProperty))
-        .map(new File(_))
-        .map {
-          dir =>
-            dir.mkdirs
-            dir
-        }  
-        .map(new File(_,"hgnc_complete_set.txt"))
-
-
-    private def loadLines: List[String] = {
-
-      Try(hgncFile.get)
-        .flatMap {
-          file =>
-            (
-              if (
-                file.createNewFile ||                                          // Check if file had to be created because it didn't exist yet
-                Files.readAttributes(file.toPath,classOf[BasicFileAttributes]) // or whether its last update is older than 7 days
-                  .lastModifiedTime
-                  .toInstant
-                  .isBefore(Instant.now.minus(Duration.of(7,DAYS)))
-              ){
-                log.info(s"Fetching current complete HGNC set from $hgncUrl")
-                
-                val connection = new URL(hgncUrl).openConnection
-
-                connection.setReadTimeout(3000) // time-out in milli-seconds
-
-                Using(connection.getInputStream)(
-                  in => 
-                    Files.copy(in,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
-                )
-                .transform(
-                  s => Success(file),
-                  t => {
-                    log.error(s"Error updating HGNC catalog file; deleting it",t)
-                    file.delete
-                    Failure(t)
-                  }
-                )
-              } else {
-                Success(file)
-              }
-            )
-            .map(Source.fromFile(_))
-      
-        }
-        .recover {
-          case n: NoSuchElementException =>
-            log.warn(s"This error occurs most likely due to undefined JVM property '$sysProperty'")
-            log.warn("Falling back to pre-packaged HGNC set")
-
-            Source.fromResource("hgnc_complete_set.txt")
-
-          case t =>
-            log.warn(s"Failed to get current HGNC set from $hgncUrl", t)
-            log.warn("Falling back to pre-packaged HGNC set")
-
-            Source.fromResource("hgnc_complete_set.txt")
-        }
-        .map(_.getLines)
-        .get
-        .toList
-
-    }
-
-    private def toGenes(lines: List[String]): List[HGNCGene] = {
-
-      val header =
-        lines.head.split(separator).toList
- 
-      val hgncId       = header.indexOf("hgnc_id")
-      val symbol       = header.indexOf("symbol")
-      val name         = header.indexOf("name")
-      val prevSymbols  = header.indexOf("prev_symbol")
-      val aliasSymbols = header.indexOf("alias_symbol")
-  
-      lines.tail
-        .map(_.split(separator))
-        .map(
-          line =>
-            HGNCGene(
-              HGNCGene.Id(line(hgncId)),
-              line(symbol),
-              line(name),
-              Try(line(prevSymbols)).map(toSymbolList).getOrElse(List.empty),
-              Try(line(aliasSymbols)).map(toSymbolList).getOrElse(List.empty)
-            )
-        )
-
-    }
-
-
-    private var loadedGenes =
-      toGenes(loadLines)
-
-    private var lastUpdate = Instant.now
-
-
-    override def geneList: Iterable[HGNCGene] = {
-
-      if (lastUpdate.isBefore(Instant.now.minus(Duration.of(7,DAYS)))){
-        log.info("Updating cached HGNC Gene set")
-        loadedGenes = toGenes(loadLines)
-      }
-
-      loadedGenes
-    }
-
-  }
-
-
-//  private val geneLoader: HGNCGeneLoader =
-  val geneLoader: HGNCGeneLoader =
-    Try(
-      ServiceLoader.load(classOf[HGNCGeneLoader])
-        .iterator
-        .next
-    )
-    .getOrElse(new DefaultHGNCGeneLoader)
-
-
-
-  override def genes =
-    geneLoader.geneList
-
-
-  override def gene(id: HGNCGene.Id): Option[HGNCGene] =
-    genes.find(_.id == id)
-
-
-  override def geneWithSymbol(sym: String): List[HGNCGene] =
-    genes.filter(
-      gene =>
-        gene.symbol.equalsIgnoreCase(sym) ||
-          gene.previousSymbols.exists(_.equalsIgnoreCase(sym)) ||
-            gene.aliasSymbols.exists(_.equalsIgnoreCase(sym))
-    )
-    .toList
-
-
-  override def geneWithName(name: String): Option[HGNCGene] =
-    genes.find(_.name.equalsIgnoreCase(name))
-
-
-  override def genesMatchingSymbol(sym: String): Iterable[HGNCGene] =
-    genes.filter {
-      gene =>
-
-        val lcSym = sym.toLowerCase
-
-        gene.symbol.toLowerCase.contains(lcSym) ||
-          gene.previousSymbols.exists(_.toLowerCase.contains(lcSym)) ||
-            gene.aliasSymbols.exists(_.toLowerCase.contains(lcSym))
-          
-    }
-
-
-  override def genesMatchingName(pttrn: String): Iterable[HGNCGene] =
-    genes.filter(_.name.toLowerCase.contains(pttrn.toLowerCase))
-    
-
-}
-*/
