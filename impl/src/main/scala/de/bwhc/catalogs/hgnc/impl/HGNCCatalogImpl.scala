@@ -43,15 +43,25 @@ class HGNCCatalogImpl[F[_]] extends HGNCCatalog[F]
 
 trait HGNCGeneLoader
 {
+  val url: String
+
+  val filename: String 
+
   def geneList: Iterable[HGNCGene]
 }
 
 
 trait TsvParsingOps
 {
-
   this: HGNCGeneLoader =>
   
+  override val url =
+    "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt"
+
+  override val filename = 
+    "hgnc_complete_set.txt"
+
+
   final val separator = "\t"
 
   final def toSymbolList(csv: String): List[String] =
@@ -92,8 +102,6 @@ trait TsvParsingOps
               line(name),
               line(prevSymbols) pipe toSymbolList,
               line(aliasSymbols) pipe toSymbolList
-//              Try(line(prevSymbols)).map(toSymbolList).getOrElse(List.empty),
-//              Try(line(aliasSymbols)).map(toSymbolList).getOrElse(List.empty)
             )
         )
 
@@ -105,12 +113,13 @@ trait TsvParsingOps
 }
 
 /*
-trait JsonHGNCGeneLoader extends HGNCGeneLoader
+trait JsonParsingOps
 {
+  this: HGNCGeneLoader =>
 
   import play.api.libs.json.{Json,JsObject}
 
-  protected final def readJson(in: InputStream) = {
+  final def readGenes(in: InputStream): List[HGNCGene] = {
 
     val json = Json.parse(in)
 
@@ -135,109 +144,10 @@ private object HGNCCatalogImpl
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
-/*
-  private class DefaultHGNCGeneLoader extends JsonHGNCGeneLoader
-  {
-
-    private val sysProperty = "bwhc.hgnc.dir"
-
-    private val hgncUrl =
-      "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/hgnc_complete_set.json"
-
-
-    private val hgncFile = 
-      Option(System.getProperty(sysProperty))
-        .map(new File(_))
-        .map {
-          dir =>
-            dir.mkdirs
-            dir
-        }  
-        .map(new File(_,"hgnc_complete_set.json"))
-
-
-    private def loadGenes: Iterable[HGNCGene] = {
-    
-      Try(hgncFile.get)
-        .flatMap {
-          file =>
-            if (
-              file.createNewFile ||                                          // Check if file had to be created because it didn't exist yet
-              Files.readAttributes(file.toPath,classOf[BasicFileAttributes]) // or whether its last update is older than 7 days
-                .lastModifiedTime
-                .toInstant
-                .isBefore(Instant.now.minus(Duration.of(7,DAYS)))
-            ){
-              log.info(s"Fetching current complete HGNC set from $hgncUrl")
-              
-              val connection = new URL(hgncUrl).openConnection
-
-              connection.setReadTimeout(3000) // time-out in milli-seconds
-
-              Using(connection.getInputStream)(
-                in => 
-                  Files.copy(in,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
-              )
-              .transform(
-                s => Success(file),
-                t => {
-                  log.error(s"Error updating HGNC catalog file; deleting it",t)
-                  file.delete
-                  Failure(t)
-                }
-              )
-            } else {
-              Success(file)
-            }
-        }
-        .map(
-          new FileInputStream(_)
-        )
-        .recover {
-          case n: NoSuchElementException =>
-            log.warn(s"This error occurs most likely due to undefined JVM property '$sysProperty'")
-            log.warn("Falling back to pre-packaged HGNC set")
-
-            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.json")
-
-          case t =>
-            log.warn(s"Failed to get current HGNC set from $hgncUrl", t)
-            log.warn("Falling back to pre-packaged HGNC set")
-
-            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.json")
-        }
-        .map(readJson)
-        .get
-
-    }
-
-    private var loadedGenes =
-      loadGenes
-
-    private var lastUpdate = Instant.now
-
-
-    override def geneList: Iterable[HGNCGene] = {
-
-      if (lastUpdate.isBefore(Instant.now.minus(Duration.of(7,DAYS)))){
-        log.info("Updating cached HGNC Gene set")
-        loadedGenes = loadGenes
-      }
-
-      loadedGenes
-    }
-
-  }
-*/
-
   private class DefaultHGNCGeneLoader extends HGNCGeneLoader with TsvParsingOps
   {
 
-    private val sysProperty = "bwhc.hgnc.dir"
-
-    private val hgncUrl =
-      "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt"
-
+    final val sysProperty = "bwhc.hgnc.dir"
 
     private val hgncFile = 
       Option(System.getProperty(sysProperty))
@@ -247,7 +157,7 @@ private object HGNCCatalogImpl
             dir.mkdirs
             dir
         }  
-        .map(new File(_,"hgnc_complete_set.txt"))
+        .map(new File(_,filename))
 
 
     private def loadInput: InputStream = {
@@ -263,9 +173,9 @@ private object HGNCCatalogImpl
                   .toInstant
                   .isBefore(Instant.now.minus(Duration.of(7,DAYS)))
               ){
-                log.info(s"Fetching current complete HGNC set from $hgncUrl")
+                log.info(s"Fetching current complete HGNC set from $url")
                 
-                val connection = new URL(hgncUrl).openConnection
+                val connection = new URL(url).openConnection
 
                 connection.setReadTimeout(3000) // time-out in milli-seconds
 
@@ -293,13 +203,13 @@ private object HGNCCatalogImpl
             log.warn(s"Failed to import HGNC gene set. This error occurs most likely due to undefined JVM property '$sysProperty'")
             log.warn("Falling back to pre-packaged HGNC set")
 
-            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.txt")
+            this.getClass.getClassLoader.getResourceAsStream(filename)
 
           case t =>
-            log.warn(s"Failed to get current HGNC set from $hgncUrl", t)
+            log.warn(s"Failed to get current HGNC set from $url", t)
             log.warn("Falling back to pre-packaged HGNC set")
 
-            this.getClass.getClassLoader.getResourceAsStream("hgnc_complete_set.txt")
+            this.getClass.getClassLoader.getResourceAsStream(filename)
         }
         .get
 
