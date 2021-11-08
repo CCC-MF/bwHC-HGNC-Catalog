@@ -167,7 +167,8 @@ private object HGNCCatalogImpl
           file =>
             (
               if (
-                file.createNewFile ||                                          // Check if file had to be created because it didn't exist yet
+//                file.createNewFile ||                                          // Check if file had to be created because it didn't exist yet
+                !file.exists ||                                                // Check if file doesn't exist yet
                 Files.readAttributes(file.toPath,classOf[BasicFileAttributes]) // or whether its last update is older than 7 days
                   .lastModifiedTime
                   .toInstant
@@ -177,17 +178,23 @@ private object HGNCCatalogImpl
                 
                 val connection = new URL(url).openConnection
 
-                connection.setReadTimeout(3000) // time-out in milli-seconds
+                connection.setConnectTimeout(3000) // connection build-up timeout (in milli-seconds)
+                connection.setReadTimeout(10000) // timeout in milli-seconds
+
+                val tmpFile = Files.createTempFile(file.getParentFile.toPath,"tmp_hgnc_",".txt")
 
                 Using(connection.getInputStream)(
-                  in => 
-                    Files.copy(in,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
+                  in => Files.copy(in,tmpFile,StandardCopyOption.REPLACE_EXISTING) 
                 )
                 .transform(
-                  s => Success(file),
+                  s => {
+                    Files.move(tmpFile,file.toPath,StandardCopyOption.REPLACE_EXISTING) 
+                    log.info(s"Successfully updated HGNC catalog file")
+                    Success(file)
+                  },
                   t => {
-                    log.error(s"Error updating HGNC catalog file; deleting it",t)
-                    file.delete
+                    log.error(s"Error updating HGNC catalog file; deleting tmp file",t)
+                    Files.delete(tmpFile)
                     Failure(t)
                   }
                 )

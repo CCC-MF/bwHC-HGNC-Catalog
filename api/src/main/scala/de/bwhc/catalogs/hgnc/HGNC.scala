@@ -61,9 +61,9 @@ trait HGNCCatalog[F[_]]
       .map(
         _.filter(
           gene =>
-            gene.symbol.equalsIgnoreCase(sym) ||
-              gene.previousSymbols.exists(_.equalsIgnoreCase(sym)) ||
-                gene.aliasSymbols.exists(_.equalsIgnoreCase(sym))
+            (gene.symbol equalsIgnoreCase sym) ||
+              gene.previousSymbols.exists(_ equalsIgnoreCase sym) ||
+                gene.aliasSymbols.exists(_ equalsIgnoreCase sym)
         )
         .toList
       )
@@ -81,9 +81,9 @@ trait HGNCCatalog[F[_]]
 
             val lcSym = sym.toLowerCase
 
-            gene.symbol.toLowerCase.contains(lcSym) ||
-              gene.previousSymbols.exists(_.toLowerCase.contains(lcSym)) ||
-                gene.aliasSymbols.exists(_.toLowerCase.contains(lcSym))
+            (gene.symbol.toLowerCase contains lcSym) ||
+              gene.previousSymbols.exists(_.toLowerCase contains lcSym) ||
+                gene.aliasSymbols.exists(_.toLowerCase contains lcSym)
 
         }
       )

@@ -15,6 +15,14 @@ import de.bwhc.catalogs.hgnc.{HGNCCatalog,HGNCGene}
 class Tests extends AnyFlatSpec
 {
 
+/*
+  val hgncDir = createTempDirectory("bwhc_hgnc_tests_").toFile
+
+  hgncDir.deleteOnExit
+
+  System.setProperty("bwhc.hgnc.dir", hgncDir.getAbsolutePath)
+*/
+
   val hgncTry = HGNCCatalog.getInstance
 
 

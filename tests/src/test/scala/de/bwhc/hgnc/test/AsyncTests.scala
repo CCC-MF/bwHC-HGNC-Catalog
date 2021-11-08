@@ -14,11 +14,19 @@ import de.bwhc.catalogs.hgnc.{HGNCCatalog,HGNCGene}
 import scala.concurrent.Future
 
 
+
 class AsyncTests extends AsyncFlatSpec
 {
 
   import cats.instances.future._
 
+/*
+  val hgncDir = createTempDirectory("bwhc_hgnc_async_tests_").toFile
+
+  hgncDir.deleteOnExit
+
+  System.setProperty("bwhc.hgnc.dir", hgncDir.getAbsolutePath)
+*/
 
   val hgncTry = HGNCCatalog.getInstanceF[Future]
 
