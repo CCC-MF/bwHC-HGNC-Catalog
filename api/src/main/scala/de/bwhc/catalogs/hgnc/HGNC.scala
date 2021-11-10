@@ -73,13 +73,14 @@ trait HGNCCatalog[F[_]]
       .map(_.find(_.name.equalsIgnoreCase(name)))
 
 
-  def genesMatchingSymbol(sym: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
+  def genesMatchingSymbol(sym: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] = {
+
+    val lcSym = sym.toLowerCase
+
     self.genes
       .map(
         _.filter {
           gene =>
-
-            val lcSym = sym.toLowerCase
 
             (gene.symbol.toLowerCase contains lcSym) ||
               gene.previousSymbols.exists(_.toLowerCase contains lcSym) ||
@@ -87,6 +88,7 @@ trait HGNCCatalog[F[_]]
 
         }
       )
+  }
 
   def genesMatchingName(pttrn: String)(implicit F: Applicative[F]): F[Iterable[HGNCGene]] =
     self.genes
