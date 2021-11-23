@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext,Future}
 import scala.io.Source
 import scala.util.{Try,Using,Failure,Success}
 
-import de.bwhc.catalogs.hgnc.{HGNCGene,HGNCCatalogProvider,HGNCCatalog}
+import de.bwhc.catalogs.hgnc.{HGNCGene,EnsemblId,HGNCId,HGNCCatalogProvider,HGNCCatalog}
 
 import cats.Applicative
 import cats.syntax.functor._
@@ -54,12 +54,13 @@ trait HGNCGeneLoader
 trait TsvParsingOps
 {
   this: HGNCGeneLoader =>
-  
-  override val url =
-    "https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt"
-
+ 
+ 
   override val filename = 
     "hgnc_complete_set.txt"
+
+  override val url =
+    s"https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/$filename"
 
 
   final val separator = "\t"
@@ -86,6 +87,7 @@ trait TsvParsingOps
         .toList
  
     val hgncId       = header.indexOf("hgnc_id")
+    val ensemblId    = header.indexOf("ensembl_gene_id")
     val symbol       = header.indexOf("symbol")
     val name         = header.indexOf("name")
     val prevSymbols  = header.indexOf("prev_symbol")
@@ -94,16 +96,17 @@ trait TsvParsingOps
     val genes =
       lines.tail
         .map(_ split separator)
-        .map(
+        .map {
           line =>
             HGNCGene(
-              HGNCGene.Id(line(hgncId)),
+              HGNCId(line(hgncId)),
+              Try(EnsemblId(line(ensemblId))).toOption,
               line(symbol),
               line(name),
               line(prevSymbols) pipe toSymbolList,
               line(aliasSymbols) pipe toSymbolList
             )
-        )
+        }
 
     in.close
 
@@ -112,12 +115,19 @@ trait TsvParsingOps
 
 }
 
-/*
+
 trait JsonParsingOps
 {
   this: HGNCGeneLoader =>
 
   import play.api.libs.json.{Json,JsObject}
+
+  override val filename = 
+    "hgnc_complete_set.json"
+
+  override val url =
+    s"https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/$filename"
+
 
   final def readGenes(in: InputStream): List[HGNCGene] = {
 
@@ -127,24 +137,27 @@ trait JsonParsingOps
       .map(
         obj =>
           HGNCGene(
-            HGNCGene.Id((obj \ "hgnc_id").as[String]),
+            HGNCId((obj\ "hgnc_id").as[String]),
+            (obj \ "ensembl_gene_id").asOpt[String].map(EnsemblId(_)),
             (obj \ "symbol").as[String],
             (obj \ "name").as[String],
             (obj \ "prev_symbol").asOpt[List[String]].getOrElse(List.empty),
             (obj \ "alias_symbol").asOpt[List[String]].getOrElse(List.empty)
           )
       )
+      .toList
   }
 
 }  
-*/
+
 
 private object HGNCCatalogImpl
 {
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
-  private class DefaultHGNCGeneLoader extends HGNCGeneLoader with TsvParsingOps
+//  private class DefaultHGNCGeneLoader extends HGNCGeneLoader with TsvParsingOps
+  private class DefaultHGNCGeneLoader extends HGNCGeneLoader with JsonParsingOps
   {
 
     final val sysProperty = "bwhc.hgnc.dir"
@@ -167,7 +180,6 @@ private object HGNCCatalogImpl
           file =>
             (
               if (
-//                file.createNewFile ||                                          // Check if file had to be created because it didn't exist yet
                 !file.exists ||                                                // Check if file doesn't exist yet
                 Files.readAttributes(file.toPath,classOf[BasicFileAttributes]) // or whether its last update is older than 7 days
                   .lastModifiedTime

@@ -9,7 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.must.Matchers._
 
-import de.bwhc.catalogs.hgnc.{HGNCCatalog,HGNCGene}
+import de.bwhc.catalogs.hgnc.{HGNCCatalog,HGNCGene,EnsemblId,HGNCId}
 
 import scala.concurrent.Future
 
@@ -20,13 +20,6 @@ class AsyncTests extends AsyncFlatSpec
 
   import cats.instances.future._
 
-/*
-  val hgncDir = createTempDirectory("bwhc_hgnc_async_tests_").toFile
-
-  hgncDir.deleteOnExit
-
-  System.setProperty("bwhc.hgnc.dir", hgncDir.getAbsolutePath)
-*/
 
   val hgncTry = HGNCCatalog.getInstanceF[Future]
 
@@ -50,14 +43,23 @@ class AsyncTests extends AsyncFlatSpec
   }
 
 
-  it should "contain 5 alias symbols for Gene with ID 'HGNC:24086'" in {
+  it should "contain 5 alias symbols for Gene with HGNC-ID 'HGNC:24086'" in {
 
     for {
-      gene <- hgnc.gene(HGNCGene.Id("HGNC:24086"))
+      gene <- hgnc.gene(HGNCId("HGNC:24086"))
     } yield gene.get.aliasSymbols.size must equal (5)
     
   }
 
+/*
+  it should "contain 5 alias symbols for Gene with EnsemblID 'ENSG00000148584'" in {
+
+    for {
+      gene <- hgnc.gene(EnsemblId("ENSG00000148584"))
+    } yield gene.get.aliasSymbols.size must equal (5)
+    
+  }
+*/
 
   "Some previous symbols" should "exist" in {
 
