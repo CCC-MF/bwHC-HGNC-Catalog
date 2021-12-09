@@ -49,9 +49,6 @@ class Tests extends AnyFlatSpec
     assert(
       hgnc.genes
         .filter(_.ensemblId.isDefined)
-//     .tapEach(g =>
-//       if (g.symbol startsWith "A") println(s""""${g.hgncId.value}", "${g.ensemblId.get.value}", "${g.symbol}", "${g.name}"""")
-//     )
         .forall(
           _.ensemblId.get.value startsWith "ENS"
         )
