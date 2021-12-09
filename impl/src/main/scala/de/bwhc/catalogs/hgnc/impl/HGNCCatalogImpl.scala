@@ -66,6 +66,7 @@ private object HGNCCatalogImpl
       )
       .map {
         case (host,port) =>
+          log.info(s"Using Proxy $host:$port for HGNC catalog polling")
           new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host,port.toInt))
       }
 
@@ -74,7 +75,7 @@ private object HGNCCatalogImpl
   {
 
     import java.util.concurrent.atomic.AtomicReference
-    import java.util.concurrent.{Executors,ScheduledExecutorService}
+    import java.util.concurrent.Executors
     import java.util.concurrent.TimeUnit.SECONDS
     import java.time.{Duration,LocalTime}
 
