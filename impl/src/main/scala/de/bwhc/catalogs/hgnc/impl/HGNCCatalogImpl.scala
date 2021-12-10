@@ -57,20 +57,6 @@ private object HGNCCatalogImpl
   private val log = LoggerFactory.getLogger(this.getClass)
 
 
-  private val proxy: Option[Proxy] =
-    Option(System.getProperty("https.proxyHost"))
-      .map(host => (host,System.getProperty("https.proxyPort")))
-      .orElse(
-        Option(System.getProperty("http.proxyHost"))
-          .map(host => (host,System.getProperty("http.proxyPort")))
-      )
-      .map {
-        case (host,port) =>
-          log.info(s"Using Proxy $host:$port for HGNC catalog polling")
-          new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host,port.toInt))
-      }
-
-
   private class ScheduledHGNCGeneLoader extends HGNCGeneLoader with JsonParsingOps
   {
 
@@ -78,6 +64,20 @@ private object HGNCCatalogImpl
     import java.util.concurrent.Executors
     import java.util.concurrent.TimeUnit.SECONDS
     import java.time.{Duration,LocalTime}
+
+
+    private val proxy: Option[Proxy] =
+      Option(System.getProperty("https.proxyHost"))
+        .map(host => (host,System.getProperty("https.proxyPort")))
+        .orElse(
+          Option(System.getProperty("http.proxyHost"))
+            .map(host => (host,System.getProperty("http.proxyPort")))
+        )
+        .map {
+          case (host,port) =>
+            log.info(s"Using Proxy $host:$port for HGNC catalog polling")
+            new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host,port.toInt))
+        }
 
 
     final val sysProperty = "bwhc.hgnc.dir"
