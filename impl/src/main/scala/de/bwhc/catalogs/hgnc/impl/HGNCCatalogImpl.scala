@@ -131,8 +131,8 @@ private object HGNCCatalogImpl
                     case None    => new URL(url).openConnection
                   }
 
-                connection.setConnectTimeout(2000) // connection build-up timeout (in milli-seconds)
-                connection.setReadTimeout(5000) // timeout in milli-seconds
+                connection.setConnectTimeout(3000) // connection build-up timeout (in milli-seconds)
+                connection.setReadTimeout(10000) // timeout in milli-seconds
 
                 val tmpFile = Files.createTempFile(file.getParentFile.toPath,s"tmp_${filename}","")
 
