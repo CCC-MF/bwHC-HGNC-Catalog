@@ -35,7 +35,7 @@ trait TsvParsingOps
 
     val lines =
       Source.fromInputStream(in)
-        .getLines
+        .getLines()
         .toList
 
     val header =
