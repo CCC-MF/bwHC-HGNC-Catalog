@@ -35,6 +35,29 @@ class Tests extends AnyFlatSpec
     
   }
 
+  it should "contain one match with HGNC-ID 'HGNC:11998'" in {
+
+    assert(hgnc.genesMatchingSymbol("TP53").exists(_.hgncId == HGNCId("HGNC:11998")))
+
+  }
+
+  it should "find one gene for approved symbol 'TP53' with HGNC-ID 'HGNC:11998'" in {
+
+    assert(hgnc.geneWithApprovedSymbol("TP53").exists(_.hgncId == HGNCId("HGNC:11998")))
+
+  }
+
+  it should "find one gene for approved symbol 'tp53' (lower case) with HGNC-ID 'HGNC:11998'" in {
+
+    assert(hgnc.geneWithApprovedSymbol("tp53").exists(_.hgncId == HGNCId("HGNC:11998")))
+
+  }
+
+  it should "return empty result for gene with not applicable symbol 'someuselesstestsymbol'" in {
+
+    assert(hgnc.geneWithApprovedSymbol("someuselesstestsymbol").isEmpty)
+
+  }
 
   it should "contain 5 alias symbols for Gene with HGNC-ID 'HGNC:24086'" in {
 
