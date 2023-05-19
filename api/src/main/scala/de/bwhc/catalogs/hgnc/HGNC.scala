@@ -84,6 +84,17 @@ trait HGNCCatalog[F[_]]
         .toList
       )
 
+  /**
+   * Returns one [[Option]] of [[HGNCGene]] for 'approved' symbol ignoring ambiguous 'previous/alias symbol'
+   * @param sym The symbol name
+   * @return The HGNCGene or empty Option
+   */
+  def geneWithApprovedSymbol(sym: String)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
+    self.genes
+      .map(
+        _.find(_.symbol.equalsIgnoreCase(sym))
+      )
+
   def geneWithName(name: String)(implicit F: Applicative[F]): F[Option[HGNCGene]] =
     self.genes
       .map(_.find(_.name.equalsIgnoreCase(name)))
