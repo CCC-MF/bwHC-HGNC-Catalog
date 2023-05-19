@@ -85,7 +85,7 @@ trait HGNCCatalog[F[_]]
       )
 
   /**
-   * Returns one [[Option]] of [[HGNCGene]] for 'approved' symbol ignoring ambiguous 'previous/alias symbol'
+   * Returns one Option of [[de.bwhc.catalogs.hgnc.HGNCGene]] for 'approved' symbol ignoring ambiguous 'previous/alias symbol'
    * @param sym The symbol name
    * @return The HGNCGene or empty Option
    */
