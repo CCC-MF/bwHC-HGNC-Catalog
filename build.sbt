@@ -4,8 +4,8 @@
 */
 
 name := "bwhc-hgnc-catalog"
-organization in ThisBuild := "de.bwhc"
-version in ThisBuild:= "1.0"
+ThisBuild / organization := "de.bwhc"
+ThisBuild / version      := "1.0"
 
 
 lazy val scala212 = "2.12.10"
@@ -16,7 +16,7 @@ lazy val supportedScalaVersions =
     scala213
   )
 
-scalaVersion in ThisBuild := scala213
+ThisBuild / scalaVersion := scala213
 
 //-----------------------------------------------------------------------------
 // PROJECTS
@@ -115,10 +115,8 @@ lazy val compilerOptions = Seq(
 
 lazy val commonSettings = Seq(
   scalacOptions ++= compilerOptions,
-  resolvers ++= Seq(
-    "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
-    Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots")
-  )
+  resolvers ++= Seq("Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository") ++
+    Resolver.sonatypeOssRepos("releases") ++
+    Resolver.sonatypeOssRepos("snapshots")
 )
 
