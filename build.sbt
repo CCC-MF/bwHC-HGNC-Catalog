@@ -5,7 +5,7 @@
 
 name := "bwhc-hgnc-catalog"
 organization in ThisBuild := "de.bwhc"
-version in ThisBuild:= "1.0-SNAPSHOT"
+version in ThisBuild:= "1.0"
 
 
 lazy val scala212 = "2.12.10"
